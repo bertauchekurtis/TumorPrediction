@@ -1,0 +1,63 @@
+# xgb.R
+# kurtis bertauche
+# 26 september 2022
+
+library(xgboost)
+set.seed(37)
+
+# load data
+train_data <- read.csv("data/clean/training.csv")
+test_data <- read.csv("data/clean/testing.csv")
+
+train_labels <- train_data$Outcome
+train_data$Outcome <- NULL
+
+xgb_train_data <- xgb.DMatrix(data.matrix(train_data), label = train_labels)
+
+test_labels <- test_data$Outcome
+test_data$Outcome <- NULL
+
+xgb_test_data <- xgb.DMatrix(data.matrix(test_data), label = test_labels)
+
+# a matrix to hold hyperparameter combinations
+matrixToTry <- matrix(,nrow=0,ncol=6)
+for (gamma in c(0, 0.1, 0.2, 0.3, 0.4))
+{
+  for (child_weight in c(1,2,3,4,5,6))
+  {
+    for (col_subsample in c(0.8, 0.9, 1))
+    {
+      for (max_depth in c(9, 10, 11))
+      {
+        for (subsample in c(0.8, 0.9, 1))
+        {
+          for (eta in c(0.01, 0.05, 0.08))
+          {
+            matrixToTry <- rbind(matrixToTry,
+                                 c(gamma,child_weight,
+                                   max_depth, subsample, col_subsample,
+                                   eta))
+          }
+        }
+      }
+    }
+  }
+}
+row = 4
+set.seed(37)
+model <- xgb.cv(booster = "gbtree",
+                objective = "binary:logistic",
+                gamma = matrixToTry[row, 1],
+                child_weight = matrixToTry[row, 2],
+                max_depth = matrixToTry[row, 3],
+                subsample = matrixToTry[row, 4],
+                col_subsample = matrixToTry[row, 5],
+                eta = matrixToTry[row, 6],
+                nrounds = 10000,
+                nthreads = 28,
+                nfold = 5,
+                print_every_n = 2500,
+                early_stopping_rounds = 2,
+                data = xgb_train_data,
+                eval_metric = "logloss"
+                )

@@ -41,4 +41,15 @@ best_radial_svm <- svm(as.factor(Outcome) ~ .,
                          data = train_data,
                          kernel = "radial",
                          cost = raidal_svm$bestTune[2],
-                         sigma = raidal_svm$bestTune[1])
+                         gamma = raidal_svm$bestTune[1])
+
+# POLYNOMIAL KERNEL
+poly_svm <- train(as.factor(Outcome) ~.,
+                  data = train_data,
+                  method = "svmPoly",
+                  trControl = train_control,
+                  tuneLength = 20)
+best_poly_svm <- svm(as.factor(Outcome) ~ .,
+                     data = train_data,
+                     kernel = "polynomial",
+                     cost = )
