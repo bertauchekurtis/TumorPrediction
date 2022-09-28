@@ -3,6 +3,7 @@
 # 26 september 2022
 
 library(xgboost)
+library(caret)
 set.seed(37)
 
 # load data
@@ -101,4 +102,31 @@ for (row in 1:nrow(matrixToTry))
   }
 }
 
+save(best_xgb_model, file = "models/best_xgb_model.RData")
 
+# build model with full train set
+set.seed(37)
+best_xgb_model_full <- xgboost(booster = "gbtree",
+                               objective = "binary:logistic",
+                               gamma = best_xgb_model$params$gamma,
+                               child_weight = best_xgb_model$params$child_weight,
+                               max_depth = best_xgb_model$params$max_depth,
+                               subsample = best_xgb_model$params$subsample,
+                               col_subsample = best_xgb_model$params$col_subsample,
+                               eta = best_xgb_model$params$eta,
+                               nrounds = 10000,
+                               nthreads = 28,
+                               data = xgb_train_data,
+                               eval_metric = "logloss",
+                               early_stopping_rounds = 2)
+
+xgb_predictions <- predict(best_xgb_model_full,
+                           xgb_test_data)
+xgb_predictions <- ifelse(xgb_predictions > 0.5,
+                          1,
+                          0)
+xgb_confusion_matrix <- confusionMatrix(data = factor(xgb_predictions),
+                                        reference = factor(test_labels))
+
+save(best_xgb_model_full, file = "models/best_xgb_model_full.RData")
+save(xgb_confusion_matrix, file = "results/xgb_confusion_matrix.RData")
