@@ -28,7 +28,8 @@ best_linear_svm <- svm(as.factor(Outcome) ~ .,
 linear_svm_predictions <- predict(best_linear_svm,
                                   test_data)
 linear_svm_confusion_matrix <- confusionMatrix(data = factor(linear_svm_predictions),
-                                               reference = factor(test_data$Outcome))
+                                               reference = factor(test_data$Outcome),
+                                               positive = "1")
 save(best_linear_svm, file = "models/best_linear_svm_model.RData")
 save(linear_svm_confusion_matrix, file = "results/linear_svm_confusion_matrix.RData")
 
@@ -48,6 +49,7 @@ best_radial_svm <- svm(as.factor(Outcome) ~ .,
 radial_svm_predictions <- predict(best_radial_svm,
                                   test_data)
 radial_svm_confusion_matrix <- confusionMatrix(data = factor(radial_svm_predictions),
-                                               reference = factor(test_data$Outcome))
+                                               reference = factor(test_data$Outcome),
+                                               positive = "1")
 save(best_radial_svm, file = "models/best_radial_svm_model.RData")
 save(radial_svm_confusion_matrix, file = "results/radial_svm_confusion_matrix.RData")

@@ -41,7 +41,7 @@ calcMetrics <- function(confusion_matrix, predictions, labels)
   youden_index <- sensitivity + specificity - 1
   pred <- prediction(predictions, labels)
   auc_perf <- performance(pred, measure = "auc")
-  area_under_roc_curve <- auc_perf@y.values
+  area_under_roc_curve <- auc_perf@y.values[[1]]
   
   returnFrame<- data.frame(accuracy = c(accuracy),
                            sensitivity = c(sensitivity),
@@ -59,20 +59,6 @@ calcMetrics <- function(confusion_matrix, predictions, labels)
                            youden_index = c(youden_index))
   return(returnFrame)
   
-  c(accuracy,
-    sensitivity,
-    specificity,
-    false_positive_rate,
-    false_negative_rate,
-    positive_predictive_value,
-    negative_predictive_value,
-    area_under_roc_curve,
-    positive_likelihood_ratio,
-    negative_likelihood_ratio,
-    diagnostic_odds_ratio,
-    f1_score,
-    f2_score,
-    youden_index)
 }
 
 load("models/lasso_model.RData")

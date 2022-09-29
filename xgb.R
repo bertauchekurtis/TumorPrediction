@@ -126,7 +126,8 @@ xgb_predictions <- ifelse(xgb_predictions > 0.5,
                           1,
                           0)
 xgb_confusion_matrix <- confusionMatrix(data = factor(xgb_predictions),
-                                        reference = factor(test_labels))
+                                        reference = factor(test_labels),
+                                        positive = "1")
 
 save(best_xgb_model_full, file = "models/best_xgb_model_full.RData")
 save(xgb_confusion_matrix, file = "results/xgb_confusion_matrix.RData")

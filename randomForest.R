@@ -93,6 +93,7 @@ random_forest_predictions <- predict(random_forest_model,
                                      test_data)
 random_forest_predictions <- random_forest_predictions$predictions
 random_forest_confusion_matrix <- confusionMatrix(data = factor(random_forest_predictions),
-                                                  reference = factor(test_data$Outcome))
+                                                  reference = factor(test_data$Outcome),
+                                                  positive = "1")
 
 save(random_forest_confusion_matrix, file = "results/random_forest_confusion_matrix.RData")
