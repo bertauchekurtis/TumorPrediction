@@ -4,9 +4,13 @@
 
 library(ROCR)
 library(glmnet)
+library(e1071)
+library(xgboost)
+library(ranger)
 
 test_data <- read.csv("data/clean/testing.csv")
 
+# a frame to hold everything
 performanceMetricFrame <- data.frame(accuracy = numeric(),
                                      sensitivity = numeric(),
                                      specificity = numeric(),
@@ -23,7 +27,7 @@ performanceMetricFrame <- data.frame(accuracy = numeric(),
                                      youden_index = numeric())
 
 
-
+# a function to calc metrics
 calcMetrics <- function(confusion_matrix, predictions, labels)
 {
   accuracy <- confusion_matrix$overall[1]
@@ -61,6 +65,7 @@ calcMetrics <- function(confusion_matrix, predictions, labels)
   
 }
 
+# add lasso to data frame of metrics
 load("models/lasso_model.RData")
 load("results/lasso_confusion_matrix.RData")
 test_data_glm_matrix <- model.matrix(Outcome ~ .,
@@ -68,6 +73,78 @@ test_data_glm_matrix <- model.matrix(Outcome ~ .,
 lasso_predictions <- predict(lasso_model, 
                              newx = test_data_glm_matrix, 
                              type = "response")
-hm <- calcMetrics(lasso_confusion_matrix,
-            lasso_predictions,
-            test_data$Outcome)
+performanceMetricFrame <- rbind(performanceMetricFrame, 
+                                calcMetrics(lasso_confusion_matrix,
+                                            lasso_predictions,
+                                            test_data$Outcome))
+# add ridge
+load("models/ridge_model.RData")
+load("results/ridge_confusion_matrix.RData")
+ridge_predictions <- predict(ridge_model,
+                             newx = test_data_glm_matrix,
+                             type = "response")
+performanceMetricFrame <- rbind(performanceMetricFrame,
+                                calcMetrics(ridge_confusion_matrix,
+                                            ridge_predictions,
+                                            test_data$Outcome))
+# add elastic
+load("models/elastic_net_model.RData")
+load("results/elastic_net_confusion_matrix.RData")
+elastic_predictions <- predict(elastic_net_model,
+                               newx = test_data_glm_matrix,
+                               type = "response")
+performanceMetricFrame <- rbind(performanceMetricFrame,
+                                calcMetrics(elastic_net_confusion_matrix,
+                                            elastic_predictions,
+                                            test_data$Outcome))
+# add linear svm
+load("models/best_linear_svm_model.RData")
+load("results/linear_svm_confusion_matrix.RData")
+linear_svm_predictions <- predict(best_linear_svm,
+                                  test_data,
+                                  probability = TRUE)
+linear_svm_predictions <- attr(linear_svm_predictions, "probabilities")
+linear_svm_predictions <- linear_svm_predictions[,2]
+performanceMetricFrame <- rbind(performanceMetricFrame,
+                                calcMetrics(linear_svm_confusion_matrix,
+                                            linear_svm_predictions,
+                                            test_data$Outcome))
+# add radial svm
+load("models/best_radial_svm_model.RData")
+load("results/radial_svm_confusion_matrix.RData")
+radial_svm_predictions <- predict(best_radial_svm,
+                                  test_data,
+                                  probability = TRUE)
+radial_svm_predictions <- attr(radial_svm_predictions, "probabilities")
+radial_svm_predictions <- radial_svm_predictions[,2]
+performanceMetricFrame <- rbind(performanceMetricFrame,
+                                calcMetrics(radial_svm_confusion_matrix,
+                                            radial_svm_predictions,
+                                            test_data$Outcome))
+
+# add rf
+load("models/random_forest_model.RData")
+load("results/random_forest_confusion_matrix.RData")
+rf_predictions <- predict(random_forest_model,
+                          test_data)
+rf_predictions <- rf_predictions$predictions[,2]
+performanceMetricFrame <- rbind(performanceMetricFrame,
+                                calcMetrics(random_forest_confusion_matrix,
+                                            rf_predictions,
+                                            test_data$Outcome))
+
+# and add xgb
+load("models/best_xgb_model_full.RData")
+load("results/xgb_confusion_matrix.RData")
+test_labels <- test_data$Outcome
+test_data$Outcome <- NULL
+xgb_test_data <- xgb.DMatrix(data.matrix(test_data), label = test_labels)
+xgb_predictions <- predict(best_xgb_model_full,
+                           xgb_test_data)
+performanceMetricFrame <- rbind(performanceMetricFrame,
+                                calcMetrics(xgb_confusion_matrix,
+                                            xgb_predictions,
+                                            test_labels))
+rownames(performanceMetricFrame) <- c("lasso","ridge","elastic_net","linear_svm","radial_svm","random_forest","xgb")
+performanceMetricFrame <- t(performanceMetricFrame)
+save(performanceMetricFrame, file = "results/performanceMetricFrame.RData")

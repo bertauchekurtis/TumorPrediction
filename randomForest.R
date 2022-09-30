@@ -34,7 +34,8 @@ for(row in 1:nrow(hyperParameter_matrix))
                     mtry = hyperParameter_matrix[row,2],
                     min.node.size = 5,
                     num.threads = 24,
-                    classification = TRUE)
+                    classification = TRUE,
+                    probability = TRUE)
   if(rfModel$prediction.error < random_forest_prediction_error)
   {
     random_forest_prediction_error <- rfModel$prediction.error
@@ -72,7 +73,8 @@ for(row in 1:nrow(hyperParameter_matrix))
                     mtry = hyperParameter_matrix[row,2],
                     min.node.size = 5,
                     num.threads = 24,
-                    classification = TRUE)
+                    classification = TRUE,
+                    probability = TRUE)
   if(rfModel$prediction.error < random_forest_prediction_error)
   {
     random_forest_prediction_error <- rfModel$prediction.error
@@ -92,6 +94,10 @@ for(row in 1:nrow(hyperParameter_matrix))
 random_forest_predictions <- predict(random_forest_model,
                                      test_data)
 random_forest_predictions <- random_forest_predictions$predictions
+random_forest_predictions <- random_forest_predictions[,2]
+random_forest_predictions <- ifelse(random_forest_predictions > 0.5,
+                                    1,
+                                    0)
 random_forest_confusion_matrix <- confusionMatrix(data = factor(random_forest_predictions),
                                                   reference = factor(test_data$Outcome),
                                                   positive = "1")

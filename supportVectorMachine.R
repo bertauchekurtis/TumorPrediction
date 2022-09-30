@@ -23,6 +23,7 @@ linear_svm <- train(as.factor(Outcome) ~.,
 best_linear_svm <- svm(as.factor(Outcome) ~ .,
                          data = train_data,
                          kernel = "linear",
+                         probability = TRUE,
                          cost = linear_svm$bestTune)
 
 linear_svm_predictions <- predict(best_linear_svm,
@@ -43,6 +44,7 @@ raidal_svm <- train(as.factor(Outcome) ~.,
 best_radial_svm <- svm(as.factor(Outcome) ~ .,
                          data = train_data,
                          kernel = "radial",
+                         probability = TRUE,
                          cost = raidal_svm$bestTune[2],
                          gamma = raidal_svm$bestTune[1])
 
